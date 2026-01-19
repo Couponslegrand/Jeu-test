@@ -3,53 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Schnauzer Escape</title>
+    <title>William vs Schnauzers</title>
     <style>
         body { 
-            margin: 0; overflow: hidden; background: #78B159; 
-            font-family: -apple-system, sans-serif; touch-action: none; user-select: none;
+            margin: 0; overflow: hidden; background: #5a8a3c; 
+            font-family: 'Arial Black', sans-serif; touch-action: none; user-select: none;
         }
         #ui {
             position: absolute; top: env(safe-area-inset-top, 20px); left: 10px; right: 10px;
-            display: flex; flex-direction: column; gap: 10px; pointer-events: none;
+            display: flex; flex-direction: column; gap: 8px; pointer-events: none; z-index: 10;
         }
-        /* Barre de vie style jeu de combat */
         .health-container {
-            width: 200px; height: 20px; background: rgba(0,0,0,0.5);
-            border: 2px solid white; border-radius: 10px; overflow: hidden;
+            width: 250px; height: 25px; background: rgba(0,0,0,0.6);
+            border: 3px solid #fff; border-radius: 12px; overflow: hidden;
         }
         #health-bar {
-            width: 100%; height: 100%; background: linear-gradient(to right, #ff416c, #ff4b2b);
-            transition: width 0.3s ease;
+            width: 100%; height: 100%; background: linear-gradient(90deg, #ff0000, #ff8800);
+            transition: width 0.2s ease;
         }
-        #kibble-count { color: white; font-weight: bold; font-size: 18px; text-shadow: 1px 1px 2px black; }
+        #stats { color: white; font-size: 18px; text-shadow: 2px 2px #000; }
         
-        /* Bouton Croquette */
         #kibble-btn {
-            position: absolute; bottom: 40px; right: 30px;
-            width: 80px; height: 80px; background: rgba(255,255,255,0.2);
+            position: absolute; bottom: 30px; right: 30px;
+            width: 70px; height: 70px; background: rgba(255,255,255,0.3);
             border-radius: 50%; display: flex; justify-content: center;
-            align-items: center; font-size: 40px; border: 3px solid white;
-            pointer-events: auto; touch-action: manipulation;
+            align-items: center; font-size: 35px; border: 4px solid gold;
+            cursor: pointer; z-index: 20;
         }
+
+        /* Animation FIGHT */
+        #intro-text {
+            position: absolute; inset: 0; display: flex; justify-content: center; 
+            align-items: center; color: #ff0000; font-size: 10px; font-weight: bold;
+            text-align: center; text-shadow: 4px 4px #fff; pointer-events: none;
+            opacity: 0; z-index: 50;
+        }
+        .animate-intro { animation: zoomText 2s ease-out forwards; }
+        @keyframes zoomText {
+            0% { transform: scale(0.5); opacity: 0; }
+            50% { transform: scale(5); opacity: 1; }
+            100% { transform: scale(8); opacity: 0; }
+        }
+
         #game-over {
-            position: absolute; inset: 0; background: rgba(0,0,0,0.8);
+            position: absolute; inset: 0; background: rgba(0,0,0,0.9);
             display: none; flex-direction: column; justify-content: center;
             align-items: center; color: white; z-index: 100;
         }
+        button { padding: 15px 30px; font-size: 20px; cursor: pointer; border-radius: 10px; }
     </style>
 </head>
 <body>
+    <div id="intro-text">WILLIAM :<br>FUIT VITE</div>
+    
     <div id="ui">
         <div class="health-container"><div id="health-bar"></div></div>
-        <div id="kibble-count">🦴 Croquettes: 10</div>
+        <div id="stats">🦴 Croquettes: <span id="k-count">10</span></div>
     </div>
 
-    <div id="kibble-btn">🥩</div>
+    <div id="kibble-btn" title="Appuie pour attirer les chiens">🥩</div>
 
     <div id="game-over">
-        <h1>Léché ! 🐶</h1>
-        <button onclick="location.reload()" style="padding:15px 30px; font-size:20px; border-radius:10px;">Rejouer</button>
+        <h1>LÉCHÉ ! 🐶</h1>
+        <button onclick="location.reload()">REJOUER</button>
     </div>
 
     <canvas id="gameCanvas"></canvas>
@@ -58,82 +74,115 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const healthBar = document.getElementById('health-bar');
-        const kibbleText = document.getElementById('kibble-count');
+        const kCountText = document.getElementById('k-count');
         const kibbleBtn = document.getElementById('kibble-btn');
+        const intro = document.getElementById('intro-text');
 
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
         let health = 10;
         let kibblesLeft = 10;
-        let gameActive = true;
+        let gameActive = false; // Bloqué jusqu'à la fin de l'intro
+        let globalSpeed = 1.5;
 
-        const player = { x: canvas.width/2, y: canvas.height/2, size: 50, emoji: "👱‍♂️" };
-        const dog = { x: 50, y: 50, size: 50, emoji: "🐶", speed: 2 };
+        const player = { x: canvas.width/2, y: canvas.height/2, size: 50, emoji: "🧍" };
+        const dogs = [
+            { x: 50, y: 50, emoji: "🐕‍🦺" },
+            { x: canvas.width-100, y: 50, emoji: "🐕‍🦺" }
+        ];
         let activeKibble = null;
 
-        // Contrôles
-        window.addEventListener('touchmove', (e) => {
-            if(!gameActive) return;
-            player.x = e.touches[0].clientX - 25;
-            player.y = e.touches[0].clientY - 25;
-        }, {passive: false});
+        // Lancement Intro
+        window.onload = () => {
+            intro.classList.add('animate-intro');
+            setTimeout(() => { gameActive = true; update(); }, 2000);
+        };
 
-        kibbleBtn.addEventListener('touchstart', (e) => {
-            if(kibblesLeft > 0 && !activeKibble) {
-                activeKibble = { x: player.x, y: player.y, timer: 150 };
+        // Contrôles Laptop (Flèches)
+        const keys = {};
+        window.addEventListener('keydown', (e) => keys[e.code] = true);
+        window.addEventListener('keyup', (e) => keys[e.code] = false);
+
+        // Contrôles Tactile / Souris
+        function moveHandler(e) {
+            if(!gameActive) return;
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            player.x = clientX - 25;
+            player.y = clientY - 25;
+        }
+        canvas.addEventListener('touchmove', moveHandler, {passive: false});
+        canvas.addEventListener('mousemove', moveHandler);
+
+        // Action Croquette
+        function dropKibble() {
+            if(kibblesLeft > 0 && !activeKibble && gameActive) {
+                activeKibble = { x: player.x, y: player.y, timer: 180 };
                 kibblesLeft--;
-                kibbleText.innerText = "🦴 Croquettes: " + kibblesLeft;
+                kCountText.innerText = kibblesLeft;
             }
-            e.stopPropagation();
-        });
+        }
+        kibbleBtn.addEventListener('mousedown', dropKibble);
+        kibbleBtn.addEventListener('touchstart', (e) => { e.preventDefault(); dropKibble(); });
+        window.addEventListener('keydown', (e) => { if(e.code === 'Space') dropKibble(); });
 
         function update() {
             if(!gameActive) return;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Cible du chien : Croquette ou Joueur
-            let target = activeKibble ? activeKibble : player;
-            
-            // Le chien avance vers la cible
-            let dx = (target.x + 25) - (dog.x + 25);
-            let dy = (target.y + 25) - (dog.y + 25);
-            let dist = Math.sqrt(dx*dx + dy*dy);
-            
-            if(dist > 5) {
-                dog.x += (dx/dist) * dog.speed;
-                dog.y += (dy/dist) * dog.speed;
-            }
+            // Déplacement clavier (Laptop)
+            const pSpeed = 6;
+            if(keys['ArrowUp']) player.y -= pSpeed;
+            if(keys['ArrowDown']) player.y += pSpeed;
+            if(keys['ArrowLeft']) player.x -= pSpeed;
+            if(keys['ArrowRight']) player.x += pSpeed;
 
-            // Dessiner Croquette
+            // Accélération progressive des chiens
+            globalSpeed += 0.0005;
+
+            // Gestion de la Croquette
             if(activeKibble) {
-                ctx.font = "30px serif";
-                ctx.fillText("🥩", activeKibble.x, activeKibble.y + 30);
+                ctx.font = "40px serif";
+                ctx.fillText("🥩", activeKibble.x, activeKibble.y + 35);
                 activeKibble.timer--;
                 if(activeKibble.timer <= 0) activeKibble = null;
             }
 
-            // Dessiner Joueur (Malfoy blond)
-            ctx.font = "50px serif";
-            ctx.fillText(player.emoji, player.x, player.y + 40);
+            // Joueur
+            ctx.font = "60px serif";
+            ctx.fillText(player.emoji, player.x, player.y + 50);
 
-            // Dessiner Chien
-            ctx.fillText(dog.emoji, dog.x, dog.y + 40);
-
-            // Collision avec le joueur
-            if(!activeKibble && dist < 40) {
-                health -= 0.05; // Dégâts continus si touché
-                healthBar.style.width = (health * 10) + "%";
-                if(health <= 0) {
-                    gameActive = false;
-                    document.getElementById('game-over').style.display = 'flex';
+            // Chiens
+            dogs.forEach(dog => {
+                let target = activeKibble ? activeKibble : player;
+                let dx = (target.x + 25) - (dog.x + 25);
+                let dy = (target.y + 25) - (dog.y + 25);
+                let dist = Math.sqrt(dx*dx + dy*dy);
+                
+                if(dist > 5) {
+                    dog.x += (dx/dist) * globalSpeed;
+                    dog.y += (dy/dist) * globalSpeed;
                 }
+
+                ctx.font = "60px serif";
+                ctx.fillText(dog.emoji, dog.x, dog.y + 50);
+
+                // Collision avec joueur
+                if(!activeKibble && dist < 45) {
+                    health -= 0.04; 
+                    healthBar.style.width = (health * 10) + "%";
+                }
+            });
+
+            if(health <= 0) {
+                gameActive = false;
+                document.getElementById('game-over').style.display = 'flex';
+                return;
             }
 
             requestAnimationFrame(update);
         }
-
-        update();
     </script>
 </body>
 </html>
