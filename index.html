@@ -3,68 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>William vs Schnauzers</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>William vs Schnauzers: Ultimate</title>
     <style>
+        /* Fond avec texture d'herbe et police style Arcade */
         body { 
-            margin: 0; overflow: hidden; background: #5a8a3c; 
-            font-family: 'Arial Black', sans-serif; touch-action: none; user-select: none;
+            margin: 0; overflow: hidden; 
+            background: #5a8a3c url('https://www.transparenttextures.com/patterns/grass.png');
+            font-family: 'Impact', sans-serif; touch-action: none; user-select: none;
         }
         #ui {
-            position: absolute; top: env(safe-area-inset-top, 20px); left: 10px; right: 10px;
-            display: flex; flex-direction: column; gap: 8px; pointer-events: none; z-index: 10;
+            position: absolute; top: env(safe-area-inset-top, 15px); left: 15px; right: 15px;
+            display: flex; justify-content: space-between; pointer-events: none; z-index: 10;
+            text-shadow: 2px 2px 4px #000;
+        }
+        /* Barre de vie stylisée */
+        .health-wrapper {
+            display: flex; align-items: center; gap: 10px;
         }
         .health-container {
-            width: 250px; height: 25px; background: rgba(0,0,0,0.6);
-            border: 3px solid #fff; border-radius: 12px; overflow: hidden;
+            width: 200px; height: 20px; background: rgba(0,0,0,0.7);
+            border: 3px solid #fff; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
         #health-bar {
-            width: 100%; height: 100%; background: linear-gradient(90deg, #ff0000, #ff8800);
-            transition: width 0.2s ease;
+            width: 100%; height: 100%; background: linear-gradient(180deg, #ff3333, #cc0000);
+            box-shadow: inset 0 2px 4px rgba(255,255,255,0.4); transition: width 0.1s ease;
         }
-        #stats { color: white; font-size: 18px; text-shadow: 2px 2px #000; }
-        
-        #kibble-btn {
-            position: absolute; bottom: 30px; right: 30px;
-            width: 70px; height: 70px; background: rgba(255,255,255,0.3);
-            border-radius: 50%; display: flex; justify-content: center;
-            align-items: center; font-size: 35px; border: 4px solid gold;
-            cursor: pointer; z-index: 20;
+        /* Compteurs stylisés */
+        .counter-box {
+            background: rgba(0,0,0,0.6); padding: 8px 15px; border-radius: 20px;
+            border: 2px solid #fff; font-size: 20px; color: white; display: flex; align-items: center; gap: 8px;
         }
 
-        /* Animation FIGHT */
-        #intro-text {
-            position: absolute; inset: 0; display: flex; justify-content: center; 
-            align-items: center; color: #ff0000; font-size: 10px; font-weight: bold;
-            text-align: center; text-shadow: 4px 4px #fff; pointer-events: none;
-            opacity: 0; z-index: 50;
+        /* Bouton Croquette Amélioré */
+        #kibble-btn {
+            position: absolute; bottom: 40px; right: 30px;
+            width: 85px; height: 85px; 
+            background: radial-gradient(circle at 30% 30%, #ffd700, #ff8c00);
+            border-radius: 50%; display: flex; justify-content: center; align-items: center;
+            font-size: 45px; border: 4px solid #fff; box-shadow: 0 8px 15px rgba(0,0,0,0.4);
+            cursor: pointer; z-index: 20; transition: transform 0.1s;
         }
-        .animate-intro { animation: zoomText 2s ease-out forwards; }
-        @keyframes zoomText {
-            0% { transform: scale(0.5); opacity: 0; }
-            50% { transform: scale(5); opacity: 1; }
-            100% { transform: scale(8); opacity: 0; }
+        #kibble-btn:active { transform: scale(0.9); box-shadow: 0 4px 8px rgba(0,0,0,0.4); }
+
+        /* Intro style "FIGHT" percutante */
+        #intro-screen {
+            position: absolute; inset: 0; background: rgba(0,0,0,0.8);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            color: #fff; z-index: 50; perspective: 1000px;
+        }
+        #intro-text-1 { font-size: 40px; color: #aaa; margin-bottom: -20px; opacity: 0; }
+        #intro-text-2 { 
+            font-size: 100px; color: #ff0000; text-shadow: 5px 5px #000, 0 0 20px #ff0000; 
+            transform: scale(3) rotateX(90deg); opacity: 0;
+        }
+        .anim-stage1 #intro-text-1 { animation: fadeIn 0.5s forwards; }
+        .anim-stage2 #intro-text-2 { animation: slam 0.6s cubic-bezier(.17,.67,.38,1.43) forwards; }
+        @keyframes fadeIn { to { opacity: 1; } }
+        @keyframes slam { 
+            0% { transform: scale(5) rotateX(90deg); opacity: 0; }
+            70% { transform: scale(0.9) rotateX(0deg); opacity: 1; }
+            100% { transform: scale(1) rotateX(0deg); opacity: 1; }
         }
 
         #game-over {
-            position: absolute; inset: 0; background: rgba(0,0,0,0.9);
-            display: none; flex-direction: column; justify-content: center;
-            align-items: center; color: white; z-index: 100;
+            position: absolute; inset: 0; background: rgba(0,0,0,0.95);
+            display: none; flex-direction: column; justify-content: center; align-items: center;
+            color: white; z-index: 100; text-align: center;
         }
-        button { padding: 15px 30px; font-size: 20px; cursor: pointer; border-radius: 10px; }
+        #game-over h1 { font-size: 60px; color: #ff3333; text-shadow: 3px 3px #000; }
+        .go-stats { font-size: 24px; margin: 20px 0; }
+        button { 
+            padding: 15px 40px; font-size: 24px; cursor: pointer; border-radius: 50px; 
+            border: none; background: #ff8c00; color: white; font-family: 'Impact', sans-serif;
+            box-shadow: 0 6px #cc7000; transition: all 0.1s;
+        }
+        button:active { transform: translateY(4px); box-shadow: 0 2px #cc7000; }
     </style>
 </head>
 <body>
-    <div id="intro-text">WILLIAM :<br>FUIT VITE</div>
+    <div id="intro-screen">
+        <div id="intro-text-1">WILLIAM :</div>
+        <div id="intro-text-2">FUIS VITE !</div>
+    </div>
     
     <div id="ui">
-        <div class="health-container"><div id="health-bar"></div></div>
-        <div id="stats">🦴 Croquettes: <span id="k-count">10</span></div>
+        <div class="health-wrapper">
+            <span style="font-size: 28px;">❤️</span>
+            <div class="health-container"><div id="health-bar"></div></div>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <div class="counter-box">⏱️ <span id="time-count">0s</span></div>
+            <div class="counter-box">🦴 <span id="k-count">10</span></div>
+        </div>
     </div>
 
-    <div id="kibble-btn" title="Appuie pour attirer les chiens">🥩</div>
+    <div id="kibble-btn">🥩</div>
 
     <div id="game-over">
-        <h1>LÉCHÉ ! 🐶</h1>
+        <h1>LÉCHÉ ! 💦</h1>
+        <div class="go-stats">Tu as survécu : <span id="final-time"></span></div>
         <button onclick="location.reload()">REJOUER</button>
     </div>
 
@@ -75,108 +113,217 @@
         const ctx = canvas.getContext('2d');
         const healthBar = document.getElementById('health-bar');
         const kCountText = document.getElementById('k-count');
+        const timeText = document.getElementById('time-count');
         const kibbleBtn = document.getElementById('kibble-btn');
-        const intro = document.getElementById('intro-text');
+        const introScreen = document.getElementById('intro-screen');
 
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
+        // État du jeu
         let health = 10;
         let kibblesLeft = 10;
-        let gameActive = false; // Bloqué jusqu'à la fin de l'intro
-        let globalSpeed = 1.5;
+        let gameActive = false;
+        let globalSpeed = 1.8;
+        let startTime;
+        let isLicked = false; // Pour l'effet d'éclaboussure
 
-        const player = { x: canvas.width/2, y: canvas.height/2, size: 50, emoji: "🧍" };
+        // Personnages
+        const player = { x: canvas.width/2, y: canvas.height/2, size: 60, emoji: "🧍" };
         const dogs = [
-            { x: 50, y: 50, emoji: "🐕‍🦺" },
-            { x: canvas.width-100, y: 50, emoji: "🐕‍🦺" }
+            { id: 1, x: 80, y: 80, emoji: "🐕‍🦺", targetKibbleId: null },
+            { id: 2, x: canvas.width-80, y: 80, emoji: "🐕‍🦺", targetKibbleId: null }
         ];
-        let activeKibble = null;
+        let kibbles = []; // Tableau pour gérer plusieurs croquettes
+        let kibbleIdCounter = 0;
 
-        // Lancement Intro
+        // --- Séquence d'intro ---
         window.onload = () => {
-            intro.classList.add('animate-intro');
-            setTimeout(() => { gameActive = true; update(); }, 2000);
+            setTimeout(() => introScreen.classList.add('anim-stage1'), 500);
+            setTimeout(() => introScreen.classList.add('anim-stage2'), 1200);
+            setTimeout(() => {
+                introScreen.style.display = 'none';
+                gameActive = true;
+                startTime = Date.now();
+                update();
+                timerLoop();
+            }, 3000);
         };
 
-        // Contrôles Laptop (Flèches)
+        // --- Contrôles ---
         const keys = {};
         window.addEventListener('keydown', (e) => keys[e.code] = true);
         window.addEventListener('keyup', (e) => keys[e.code] = false);
 
-        // Contrôles Tactile / Souris
         function moveHandler(e) {
             if(!gameActive) return;
-            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            player.x = clientX - 25;
-            player.y = clientY - 25;
+            const cx = e.touches ? e.touches[0].clientX : e.clientX;
+            const cy = e.touches ? e.touches[0].clientY : e.clientY;
+            // Le joueur suit le doigt/souris avec un léger décalage pour qu'il soit centré sous le doigt
+            player.x = cx - 30;
+            player.y = cy - 30;
         }
         canvas.addEventListener('touchmove', moveHandler, {passive: false});
         canvas.addEventListener('mousemove', moveHandler);
 
-        // Action Croquette
+        // --- Logique des Croquettes (Complexe) ---
         function dropKibble() {
-            if(kibblesLeft > 0 && !activeKibble && gameActive) {
-                activeKibble = { x: player.x, y: player.y, timer: 180 };
+            if(kibblesLeft > 0 && gameActive) {
+                kibbles.push({ 
+                    id: kibbleIdCounter++, 
+                    x: player.x, 
+                    y: player.y, 
+                    timer: 240, // Dure 4 secondes
+                    assignedTo: null 
+                });
                 kibblesLeft--;
                 kCountText.innerText = kibblesLeft;
+                // Petit effet visuel sur le bouton
+                kibbleBtn.style.transform = "scale(1.2)";
+                setTimeout(() => kibbleBtn.style.transform = "scale(1)", 100);
             }
         }
         kibbleBtn.addEventListener('mousedown', dropKibble);
         kibbleBtn.addEventListener('touchstart', (e) => { e.preventDefault(); dropKibble(); });
         window.addEventListener('keydown', (e) => { if(e.code === 'Space') dropKibble(); });
 
+        // Fonction pour assigner les croquettes aux chiens de manière intelligente
+        function assignTargets() {
+            // Réinitialiser les cibles
+            dogs.forEach(dog => dog.targetKibbleId = null);
+            kibbles.forEach(k => k.assignedTo = null);
+
+            // Pour chaque chien, trouver la croquette libre la plus proche
+            dogs.forEach(dog => {
+                let bestKibble = null;
+                let minDistance = Infinity;
+
+                kibbles.forEach(kibble => {
+                    if (kibble.assignedTo === null) { // Si la croquette est libre
+                        let dx = kibble.x - dog.x;
+                        let dy = kibble.y - dog.y;
+                        let dist = dx*dx + dy*dy; // Distance au carré (plus rapide)
+                        if (dist < minDistance) {
+                            minDistance = dist;
+                            bestKibble = kibble;
+                        }
+                    }
+                });
+
+                // Si une croquette a été trouvée pour ce chien, on fait le lien
+                if (bestKibble) {
+                    dog.targetKibbleId = bestKibble.id;
+                    bestKibble.assignedTo = dog.id;
+                }
+            });
+        }
+
+        // --- Timer ---
+        function timerLoop() {
+            if(!gameActive) return;
+            let elapsed = Math.floor((Date.now() - startTime) / 1000);
+            timeText.innerText = elapsed + "s";
+            setTimeout(timerLoop, 1000);
+        }
+
+        // --- Boucle Principale du Jeu ---
         function update() {
             if(!gameActive) return;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Déplacement clavier (Laptop)
-            const pSpeed = 6;
+            // Déplacement Clavier
+            const pSpeed = 7;
             if(keys['ArrowUp']) player.y -= pSpeed;
             if(keys['ArrowDown']) player.y += pSpeed;
             if(keys['ArrowLeft']) player.x -= pSpeed;
             if(keys['ArrowRight']) player.x += pSpeed;
 
-            // Accélération progressive des chiens
-            globalSpeed += 0.0005;
+            // Accélération des chiens
+            globalSpeed += 0.0008;
 
-            // Gestion de la Croquette
-            if(activeKibble) {
-                ctx.font = "40px serif";
-                ctx.fillText("🥩", activeKibble.x, activeKibble.y + 35);
-                activeKibble.timer--;
-                if(activeKibble.timer <= 0) activeKibble = null;
-            }
+            // Mise à jour des cibles
+            assignTargets();
 
-            // Joueur
-            ctx.font = "60px serif";
-            ctx.fillText(player.emoji, player.x, player.y + 50);
+            isLicked = false; // Réinitialiser l'état de léchage
 
-            // Chiens
+            // --- Gestion des Chiens ---
             dogs.forEach(dog => {
-                let target = activeKibble ? activeKibble : player;
-                let dx = (target.x + 25) - (dog.x + 25);
-                let dy = (target.y + 25) - (dog.y + 25);
+                let target = player; // Cible par défaut : le joueur
+                
+                // Si le chien a une croquette assignée, c'est sa nouvelle cible
+                if(dog.targetKibbleId !== null) {
+                    target = kibbles.find(k => k.id === dog.targetKibbleId);
+                    if(!target) { // Sécurité : si la croquette a disparu entre temps
+                        target = player;
+                        dog.targetKibbleId = null;
+                    }
+                }
+                
+                // Calcul du vecteur de déplacement
+                let dx = (target.x + 30) - (dog.x + 30);
+                let dy = (target.y + 30) - (dog.y + 30);
                 let dist = Math.sqrt(dx*dx + dy*dy);
                 
-                if(dist > 5) {
+                // Le chien avance s'il n'est pas trop près de sa cible
+                if(dist > 10) {
                     dog.x += (dx/dist) * globalSpeed;
                     dog.y += (dy/dist) * globalSpeed;
                 }
 
-                ctx.font = "60px serif";
-                ctx.fillText(dog.emoji, dog.x, dog.y + 50);
+                // Dessiner le chien avec une ombre
+                ctx.shadowColor = "rgba(0,0,0,0.5)"; ctx.shadowBlur = 15;
+                ctx.font = "70px serif";
+                ctx.fillText(dog.emoji, dog.x, dog.y + 60);
+                ctx.shadowBlur = 0;
 
-                // Collision avec joueur
-                if(!activeKibble && dist < 45) {
-                    health -= 0.04; 
-                    healthBar.style.width = (health * 10) + "%";
+                // Collision avec le joueur (seulement si le chien ne vise pas une croquette)
+                if(dog.targetKibbleId === null && dist < 50) {
+                    health -= 0.06; 
+                    healthBar.style.width = Math.max(0, health * 10) + "%";
+                    isLicked = true; // Active l'effet visuel
                 }
             });
 
+            // --- Gestion des Croquettes ---
+            for(let i = kibbles.length - 1; i >= 0; i--) {
+                let k = kibbles[i];
+                ctx.shadowColor = "rgba(0,0,0,0.3)"; ctx.shadowBlur = 10; ctx.shadowOffsetY = 5;
+                ctx.font = "50px serif";
+                ctx.fillText("🥩", k.x, k.y + 40);
+                ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+
+                k.timer--;
+                // La croquette disparaît si son temps est écoulé
+                if(k.timer <= 0) {
+                    kibbles.splice(i, 1);
+                }
+            }
+
+            // --- Dessiner le Joueur ---
+            // Ombre portée
+            ctx.shadowColor = "rgba(0,0,0,0.6)"; ctx.shadowBlur = 20;
+            ctx.font = "70px serif";
+            ctx.fillText(player.emoji, player.x, player.y + 60);
+            ctx.shadowBlur = 0;
+
+            // --- Effet de Léchage (Éclaboussures) ---
+            if(isLicked) {
+                ctx.font = "50px serif";
+                // Affiche 3 gouttes d'eau aléatoirement autour du joueur
+                ctx.fillText("💦", player.x - 20 + Math.random()*20, player.y + 30 + Math.random()*20);
+                ctx.fillText("💦", player.x + 40 + Math.random()*20, player.y + 10 + Math.random()*20);
+                ctx.fillText("💦", player.x + 10 + Math.random()*20, player.y + 70 + Math.random()*20);
+                // Petit effet de tremblement de l'écran
+                canvas.style.transform = `translate(${Math.random()*4-2}px, ${Math.random()*4-2}px)`;
+            } else {
+                canvas.style.transform = "none";
+            }
+
+            // --- Fin de Partie ---
             if(health <= 0) {
                 gameActive = false;
+                canvas.style.transform = "none";
+                document.getElementById('final-time').innerText = timeText.innerText;
                 document.getElementById('game-over').style.display = 'flex';
                 return;
             }
