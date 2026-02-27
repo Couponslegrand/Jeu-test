@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mission 007</title>
+    <style>
+        :root {
+            --bg-color: #1e1e2f;
+            --panel-bg: #2a2a40;
+            --text-color: #ffffff;
+            --accent-color: #ff3b3b;
+            --btn-bg: #3b3b5c;
+            --btn-hover: #4e4e7a;
+            --disabled: #222233;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h1 { margin-top: 20px; text-transform: uppercase; letter-spacing: 2px;}
+
+        .score-board {
+            font-size: 1.5rem;
+            font-weight: bold;
+            background: var(--panel-bg);
+            padding: 10px 30px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .arena {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 20px;
+            gap: 20px;
+        }
+
+        .player-card {
+            background: var(--panel-bg);
+            flex: 1;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .avatar { font-size: 4rem; margin-bottom: 10px; }
+        .energy { font-size: 1.5rem; color: #4cd137; margin-bottom: 15px; font-weight: bold;}
+        .action-display { font-size: 3rem; min-height: 60px; line-height: 60px; }
+
+        .log-box {
+            background: var(--panel-bg);
+            width: 100%;
+            max-width: 600px;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            min-height: 60px;
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            border-left: 5px solid var(--accent-color);
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        button {
+            background: var(--btn-bg);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 4px 0px rgba(0,0,0,0.2);
+        }
+
+        button:hover:not(:disabled) {
+            background: var(--btn-hover);
+            transform: translateY(-2px);
+        }
+
+        button:active:not(:disabled) {
+            transform: translateY(2px);
+            box-shadow: 0 0px 0px rgba(0,0,0,0.2);
+        }
+
+        button:disabled {
+            background: var(--disabled);
+            color: #555;
+            cursor: not-allowed;
+            box-shadow: none;
+            opacity: 0.6;
+        }
+
+        .btn-icon { font-size: 2rem; margin-bottom: 5px; }
+        .cost { font-size: 0.8rem; color: #aaa; margin-top: 5px;}
+
+    </style>
+</head>
+<body>
+
+    <h1>🕵️‍♂️ Mission 007</h1>
+    
+    <div class="score-board">
+        Joueur <span id="score-player">0</span> - <span id="score-bot">0</span> Bot
+    </div>
+
+    <div class="arena">
+        <div class="player-card">
+            <div class="avatar">👤</div>
+            <div class="energy" id="energy-player">🔋 x 0</div>
+            <div class="action-display" id="action-player">❓</div>
+        </div>
+        <div class="player-card">
+            <div class="avatar">🤖</div>
+            <div class="energy" id="energy-bot">🔋 x 0</div>
+            <div class="action-display" id="action-bot">❓</div>
+        </div>
+    </div>
+
+    <div class="log-box" id="log-message">
+        La partie commence. Premier à 5 points ! Préparez-vous.
+    </div>
+
+    <div class="controls">
+        <button onclick="playRound('charge')" id="btn-charge">
+            <span class="btn-icon">🔋</span><span>Charger</span><span class="cost">+1 Recharge</span>
+        </button>
+        <button onclick="playRound('miroir')" id="btn-miroir">
+            <span class="btn-icon">🪞</span><span>Miroir</span><span class="cost">Coût: 0</span>
+        </button>
+        <button onclick="playRound('bouclier')" id="btn-bouclier">
+            <span class="btn-icon">🛡️</span><span>Bouclier</span><span class="cost">Coût: 0</span>
+        </button>
+        <button onclick="playRound('pistolet')" id="btn-pistolet">
+            <span class="btn-icon">🔫</span><span>Pistolet</span><span class="cost">Coût: 3</span>
+        </button>
+        <button onclick="playRound('canon')" id="btn-canon">
+            <span class="btn-icon">💣</span><span>Canon</span><span class="cost">Coût: 5</span>
+        </button>
+        <button onclick="playRound('bazooka')" id="btn-bazooka">
+            <span class="btn-icon">🚀</span><span>Bazooka</span><span class="cost">Coût: 10</span>
+        </button>
+    </div>
+
+    <script>
+        // --- VARIABLES D'ÉTAT ---
+        let scorePlayer = 0;
+        let scoreBot = 0;
+        let chargesPlayer = 0;
+        let chargesBot = 0;
+        const targetScore = 5;
+
+        const emojis = {
+            'charge': '🔋', 'miroir': '🪞', 'bouclier': '🛡️',
+            'pistolet': '🔫', 'canon': '💣', 'bazooka': '🚀'
+        };
+
+        // --- INTELLIGENCE ARTIFICIELLE ---
+        function getBotAction() {
+            if (chargesBot >= 10) return 'bazooka'; // Victoire assurée
+
+            let r = Math.random();
+
+            if (chargesPlayer < 3) {
+                // Le joueur ne peut pas attaquer
+                if (chargesBot < 3) return 'charge';
+                if (chargesBot >= 3 && chargesBot < 5) return r < 0.4 ? 'pistolet' : 'charge';
+                if (chargesBot >= 5) {
+                    if (r < 0.3) return 'canon';
+                    if (r < 0.5) return 'pistolet';
+                    return 'charge';
+                }
+            } else if (chargesPlayer >= 3 && chargesPlayer < 5) {
+                // Le joueur a le Pistolet
+                if (chargesBot < 3) {
+                    if (r < 0.3) return 'bouclier';
+                    if (r < 0.5) return 'miroir';
+                    return 'charge';
+                } else if (chargesBot >= 3 && chargesBot < 5) {
+                    if (r < 0.3) return 'bouclier';
+                    if (r < 0.5) return 'miroir';
+                    if (r < 0.7) return 'pistolet';
+                    return 'charge';
+                } else {
+                    if (r < 0.3) return 'bouclier';
+                    if (r < 0.7) return 'canon';
+                    return 'charge';
+                }
+            } else {
+                // Le joueur a le Canon (ou Bazooka)
+                if (chargesPlayer >= 10) return 'bouclier'; // Bot panique (mort imminente)
+                if (r < 0.4) return 'bouclier'; // Défense principale
+                if (r < 0.45) return 'miroir'; // Erreur du bot
+                if (chargesBot >= 5 && r < 0.7) return 'canon';
+                if (chargesBot >= 3 && r < 0.8) return 'pistolet'; // Tente un truc désespéré
+                return 'charge';
+            }
+        }
+
+        // --- LOGIQUE DE RESOLUTION ---
+        function playRound(playerAction) {
+            let botAction = getBotAction();
+
+            // Affichage des actions
+            document.getElementById('action-player').innerText = emojis[playerAction];
+            document.getElementById('action-bot').innerText = emojis[botAction];
+
+            // Déduction des coûts et ajouts
+            if (playerAction === 'charge') chargesPlayer++;
+            if (playerAction === 'pistolet') chargesPlayer -= 3;
+            if (playerAction === 'canon') chargesPlayer -= 5;
+            if (playerAction === 'bazooka') chargesPlayer -= 10;
+
+            if (botAction === 'charge') chargesBot++;
+            if (botAction === 'pistolet') chargesBot -= 3;
+            if (botAction === 'canon') chargesBot -= 5;
+            if (botAction === 'bazooka') chargesBot -= 10;
+
+            // Analyse du combat
+            let playerDies = false;
+            let botDies = false;
+            let message = `Vous: ${emojis[playerAction]} | Bot: ${emojis[botAction]}<br>`;
+
+            // Cas Bazooka
+            if (playerAction === 'bazooka') botDies = true;
+            if (botAction === 'bazooka') playerDies = true;
+
+            if (!playerDies && !botDies) {
+                // Évaluation des attaques
+                let pAttacks = (playerAction === 'pistolet' || playerAction === 'canon');
+                let bAttacks = (botAction === 'pistolet' || botAction === 'canon');
+
+                // Si les deux attaquent
+                if (pAttacks && bAttacks) {
+                    if (playerAction === botAction) {
+                        message += "Les tirs s'annulent ! Personne ne meurt.";
+                    } else if (playerAction === 'canon' && botAction === 'pistolet') {
+                        botDies = true; message += "Votre Canon détruit son Pistolet !";
+                    } else if (botAction === 'canon' && playerAction === 'pistolet') {
+                        playerDies = true; message += "Son Canon détruit votre Pistolet !";
+                    }
+                } else {
+                    // Joueur attaque
+                    if (playerAction === 'pistolet') {
+                        if (botAction === 'miroir') { playerDies = true; message += "Le bot renvoie votre tir de Pistolet !"; }
+                        else if (botAction === 'bouclier') { message += "Le bot bloque votre Pistolet."; }
+                        else { botDies = true; message += "Votre tir fait mouche !"; }
+                    }
+                    if (playerAction === 'canon') {
+                        if (botAction === 'bouclier') { message += "Le bot encaisse le Canon avec son Bouclier."; }
+                        else if (botAction === 'miroir') { botDies = true; message += "Le Miroir du bot se brise face au Canon !"; }
+                        else { botDies = true; message += "Le Canon pulvérise le bot !"; }
+                    }
+
+                    // Bot attaque
+                    if (botAction === 'pistolet') {
+                        if (playerAction === 'miroir') { botDies = true; message += "Vous renvoyez le tir du bot !"; }
+                        else if (playerAction === 'bouclier') { message += "Vous bloquez le tir."; }
+                        else { playerDies = true; message += "Le tir du bot vous atteint !"; }
+                    }
+                    if (botAction === 'canon') {
+                        if (playerAction === 'bouclier') { message += "Vous encaissez le Canon avec le Bouclier."; }
+                        else if (playerAction === 'miroir') { playerDies = true; message += "Votre Miroir se brise face au Canon !"; }
+                        else { playerDies = true; message += "Le Canon du bot vous pulvérise !"; }
+                    }
+                }
+            }
+
+            // Conséquences
+            if (playerDies && botDies) {
+                message += "<br><strong>Égalité ! Vous vous êtes entretués ! Les recharges sont perdues.</strong>";
+                resetRound(false); // Reset des charges sans changer le score
+            } else if (botDies) {
+                scorePlayer++;
+                message += "<br><strong>🎯 VOUS GAGNEZ LE ROUND !</strong>";
+                resetRound(true);
+            } else if (playerDies) {
+                scoreBot++;
+                message += "<br><strong>💀 LE BOT GAGNE LE ROUND !</strong>";
+                resetRound(true);
+            }
+
+            document.getElementById('log-message').innerHTML = message;
+            updateUI();
+            checkVictory();
+        }
+
+        function resetRound(resetCharges) {
+            if (resetCharges) {
+                chargesPlayer = 0;
+                chargesBot = 0;
+            }
+            // Remet les actions à "?" après un délai pour qu'on voie ce qui s'est passé
+            setTimeout(() => {
+                document.getElementById('action-player').innerText = '❓';
+                document.getElementById('action-bot').innerText = '❓';
+            }, 2500);
+        }
+
+        // --- MISE À JOUR DE L'INTERFACE ---
+        function updateUI() {
+            document.getElementById('score-player').innerText = scorePlayer;
+            document.getElementById('score-bot').innerText = scoreBot;
+            document.getElementById('energy-player').innerText = `🔋 x ${chargesPlayer}`;
+            document.getElementById('energy-bot').innerText = `🔋 x ${chargesBot}`;
+
+            // Désactivation dynamique des boutons selon les recharges
+            document.getElementById('btn-pistolet').disabled = (chargesPlayer < 3);
+            document.getElementById('btn-canon').disabled = (chargesPlayer < 5);
+            document.getElementById('btn-bazooka').disabled = (chargesPlayer < 10);
+        }
+
+        function checkVictory() {
+            if (scorePlayer >= targetScore) {
+                alert("🏆 MISSION ACCOMPLIE ! Vous avez vaincu le Bot !");
+                resetGame();
+            } else if (scoreBot >= targetScore) {
+                alert("☠️ MISSION ÉCHOUÉE ! Le Bot a pris le contrôle.");
+                resetGame();
+            }
+        }
+
+        function resetGame() {
+            scorePlayer = 0;
+            scoreBot = 0;
+            chargesPlayer = 0;
+            chargesBot = 0;
+            updateUI();
+            document.getElementById('log-message').innerHTML = "Nouvelle partie. Premier à 5 !";
+            document.getElementById('action-player').innerText = '❓';
+            document.getElementById('action-bot').innerText = '❓';
+        }
+
+        // Initialisation de l'interface au chargement
+        updateUI();
+    </script>
+</body>
+</html>
